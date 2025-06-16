@@ -1,0 +1,23 @@
+version: "0.2"
+phases:
+
+  pre_build:
+    commands:
+      - aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 820183542087.dkr.ecr.us-east-2.amazonaws.com/
+      - REPOSITORY_URI=820183542087.dkr.ecr.us-east-2.amazonaws.com/user-post-api
+      - IMAGE_TAG=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+  build:
+    commands:
+      - echo "Build started on `date`"
+      - echo "Running tests..."
+      - mvn -B package --file pom.xml
+      - echo "Packaging application..."
+      - echo "Building the Docker image..."
+      - docker build -t $ImageName -f ./Dockerfile .
+      - docker images
+  post_build:
+    commands:
+      - echo "Build completed on `date`"
+      - echo "Pushing the Docker images to ECR..."
+      - docker tag $ImageName:latest 820183542087.dkr.ecr.us-east-2.amazonaws.com/$ImageName:latest
+      - docker push 820183542087.dkr.ecr.us-east-2.amazonaws.com/$ImageName:latest
