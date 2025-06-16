@@ -1,130 +1,142 @@
-# UserPostAPI
+# User-Post REST API
 
-A fully containerized Spring Boot REST API for managing Users and Posts, built with:
-
-- Spring Boot
-- Docker
-- AWS App Runner (fully managed CI/CD pipeline)
-- GitHub (source control)
+A Spring Boot-based REST API to manage Users and Posts with full CRUD functionality, containerized using Docker and deployed via AWS App Runner with CI/CD integration.
 
 ---
 
-** Application URL**
-https://qsmgq6qpcg.us-east-2.awsapprunner.com/users
-https://qsmgq6qpcg.us-east-2.awsapprunner.com/posts
+## Table of Contents
+
+* [API Overview](#api-overview)
+* [Project Architecture & Code Structure](#project-architecture--code-structure)
+* [How to Run Locally (from ZIP file)](#how-to-run-locally-from-zip-file)
+* [API Endpoints](#api-endpoints)
+
+  * [Users API](#users-api-endpoints-users)
+  * [Posts API](#posts-api-endpoints-posts)
+* [Application URL](#application-url)
+* [Testing Approach](#testing-approach)
+* [Deployment Process](#deployment-process)
+
+  * [Local Development](#local-development)
+  * [Containerization (Dockerfile)](#containerization-dockerfile)
+  * [Version Control](#version-control)
+  * [AWS App Runner Deployment](#aws-app-runner-deployment)
+  * [CI/CD Automation](#cicd-automation)
+* [Tools Used](#tools-used)
 
 ---
 
-# Features
+## API Overview
 
-- Full CRUD APIs for Users and Posts
-- Custom Exception Handling
-- Spring Retry with Recovery mechanism
-- Docker-based build & deployment
-- Fully automated CI/CD pipeline using AWS App Runner and GitHub
-- Clean code separation across service layers
+The UserPostAPI is a RESTful API that allows managing users and posts. The system supports:
 
----
-
-# Project Architecture & Code Structure
-
-The application is designed following **clean layered architecture** principles to ensure:
-
-| Package | Responsibility |
-| ------- | -------------- |
-| `controller` | Handles HTTP requests & exposes REST APIs |
-| `service` | Business logic layer (orchestration logic happens here) |
-| `repository` | Data access layer (In-memory data storage implementation) |
-| `model` | POJO classes representing domain entities (`User`, `Post`) |
-| `exception` | Centralized exception handling and custom exception definitions |
-| `UserPostApplication.java` | Application bootstrap class (Spring Boot entry point) |
+* CRUD operations for both users and posts.
+* Retry and recovery mechanisms while creating users.
+* Custom exception handling for all major error scenarios.
+* In-memory persistence for simplicity.
+* Fully containerized and deployed using AWS App Runner and GitHub CI/CD.
 
 ---
 
-# Layered Design Summary
+## Project Architecture & Code Structure
 
-- **Controller Layer**: REST APIs for user and post management.
-- **Service Layer**: Core business logic, retries, recovery, orchestration.
-- **Repository Layer**: In-memory data storage using Java Maps.
-- **Model Layer**: Domain objects for data transfer.
-- **Exception Layer**: Custom exceptions + centralized error handling.
-- **Entry Point**: `UserPostApplication` boots the Spring context.
+The application is designed following clean layered architecture principles to ensure:
 
----
+* Code separation
+* Scalability
+* Maintainability
+* Testability
 
-# Fully automated pipeline:
+### Code Segregation
 
-**CI/CD is implemented via AWS CodePipeline** which has 4 steps:
-1. Source code pull stage - which pulls the code automatically on changes from GitHub repo - main branch
-2. Build using AWS CodeBuild - Builds the Maven jar package
-3. Docker image using ECR - Creates the docker image  in AWS ECR
-4. Deployment of service using AWS App Runner - Hosts the app remotely via deploying the generated ECR image
+| Package                    | Responsibility                                                  |
+| -------------------------- | --------------------------------------------------------------- |
+| `controller`               | Handles HTTP requests & exposes REST APIs                       |
+| `service`                  | Business logic layer (orchestration logic happens here)         |
+| `repository`               | Data access layer (In-memory data storage implementation)       |
+| `model`                    | POJO classes representing domain entities (User, Post)          |
+| `exception`                | Centralized exception handling and custom exception definitions |
+| `UserPostApplication.java` | Application bootstrap class (Spring Boot entry point)           |
 
----
+### Benefits of This Design
 
-# Benefits:
+* Clear separation of concerns (Controller - Service - Repository).
+* Easy to maintain and extend (Database addition requires minimal changes).
+* Simplifies unit testing and mocking layers.
+* Makes retry, recovery, and exception handling modular.
+* Aligned with Spring Boot best practices.
 
--  End-to-end CI/CD automated
--  Zero downtime deployments
--  No server maintenance
--  SSL & DNS handled automatically by AWS
--  Scales automatically
+### API Design Summary
 
-# Dockerfile (Used directly by AWS App Runner)
-
-```dockerfile
-FROM amazoncorretto:17
-# Define an argument for the path to the JAR file created by Maven.
-# This makes the Dockerfile more flexible.
-ARG JAR_FILE=target/*.jar
-
-# Copy the JAR file from the build context (where CodeBuild runs) into the container.
-# It is renamed to "application.jar" for a consistent name.
-COPY ${JAR_FILE} application.jar
-
-# Inform Docker that the container listens on port 8080 at runtime.
-# This is the default port for Spring Boot web applications.
-EXPOSE 8080
-
-# The command to run when the container starts.
-# This executes the Spring Boot application.
-ENTRYPOINT ["java", "-jar", "application.jar"]
+* Follows REST principles (resource-based URLs, proper HTTP methods).
+* All inputs are handled using `@Valid` and `@RequestBody` annotations.
+* Exception handling is centralized through `RestExceptionHandler`.
+* `ResponseEntity` is used to return appropriate status codes and responses.
+* Clean separation of controller, service, and repository layers.
 
 ---
 
-** API Endpoints**
-User APIs
-| Method | Endpoint    | Description    |
-| ------ | ----------- | -------------- |
-| POST   | /users      | Create a user  |
-| GET    | /users/{id} | Get user by ID |
-| GET    | /users      | Get all users  |
-| PUT    | /users/{id} | Update user    |
-| DELETE | /users/{id} | Delete user    |
+## How to Run Locally (from ZIP file)
 
-Post APIs
-| Method | Endpoint    | Description    |
-| ------ | ----------- | -------------- |
-| POST   | /posts      | Create a post  |
-| GET    | /posts/{id} | Get post by ID |
-| GET    | /posts      | Get all posts  |
-| PUT    | /posts/{id} | Update post    |
-| DELETE | /posts/{id} | Delete post    |
+### Unzip the Code
+
+```bash
+unzip your-file-name.zip
+cd extracted-folder-name
+```
+
+### Install Java
+
+Make sure Java 17 is installed.
+
+```bash
+java -version
+```
+
+### Install Maven
+
+Check if Maven is installed:
+
+```bash
+mvn -version
+```
+
+If Maven is not installed, install it accordingly.
+
+### Run Directly from Source Code (No JAR needed)
+
+```bash
+mvn spring-boot:run
+```
+
+or (if `mvnw` is available):
+
+```bash
+./mvnw spring-boot:run
+```
+
+### Access the Application
+
+Once running:
+
+* `http://localhost:8080/users`
+* `http://localhost:8080/posts`
+
+---
 
 ## API Endpoints
 
 ### Users API Endpoints (`/users`)
 
-This resource manages user data.
-
 #### 1. Get All Users
 
-- **Endpoint:** `GET /users`
-- **Description:** Retrieves a list of all users.
-- **Request Body:** None.
-- **Success Response:**
-  - Code: `200 OK`
-  - Content:
+* **Endpoint:** GET /users
+* **Description:** Retrieves a list of all users.
+* **Request Body:** None.
+* **Success Response:**
+
+  * Code: 200 OK
+  * Content:
 
 ```json
 [
@@ -139,108 +151,106 @@ This resource manages user data.
     "email": "jane.smith@example.com"
   }
 ]
-2. Create a New User
-Endpoint: POST /users
+```
 
-Description: Creates a new user.
+* **Error Response:** None typical for this endpoint.
 
-Request Body:
+#### 2. Create a New User
+
+* **Endpoint:** POST /users
+* **Description:** Creates a new user.
+* **Request Body:**
 
 ```json
 {
   "name": "Peter Jones",
   "email": "peter.jones@example.com"
 }
-Success Response:
+```
 
-Code: 201 Created
+* **Success Response:**
+
+  * Code: 201 Created
+  * Content:
 
 ```json
-
 {
   "id": 3,
   "name": "Peter Jones",
   "email": "peter.jones@example.com"
 }
-3. Get a Single User
-Endpoint: GET /users/{id}
+```
 
-Description: Retrieves a single user by their unique ID.
+* **Error Response:** None typical for this simple version.
 
-Request Body: None.
+#### 3. Get a Single User
 
-Success Response:
+* **Endpoint:** GET /users/{id}
+* **Description:** Retrieves a single user by their unique ID.
+* **Request Body:** None.
+* **Success Response:**
 
-Code: 200 OK
+  * Code: 200 OK
+  * Content: The requested user object.
+* **Error Response:**
 
-Content: The requested user object.
-
-Error Response:
-
-Code: 404 Not Found
-
-Content:
+  * Code: 404 Not Found
+  * Content:
 
 ```json
 {
   "error": "User with id 99 not found."
 }
-4. Update a User
-Endpoint: PUT /users/{id}
+```
 
-Description: Updates the name and email of an existing user.
+#### 4. Update a User
 
-Request Body:
+* **Endpoint:** PUT /users/{id}
+* **Description:** Updates the name and email of an existing user.
+* **Request Body:**
 
 ```json
-
 {
   "name": "Peter T. Jones",
   "email": "p.jones@example.com"
 }
-Success Response:
+```
 
-Code: 200 OK
+* **Success Response:**
 
-Content: The fully updated user object.
+  * Code: 200 OK
+  * Content: The fully updated user object.
+* **Error Response:**
 
-Error Response:
+  * Code: 404 Not Found
 
-Code: 404 Not Found
+#### 5. Delete a User
 
-5. Delete a User
-Endpoint: DELETE /users/{id}
+* **Endpoint:** DELETE /users/{id}
+* **Description:** Deletes a user by their unique ID.
+* **Request Body:** None.
+* **Success Response:**
 
-Description: Deletes a user by their unique ID.
+  * Code: 204 No Content
+* **Error Response:**
 
-Request Body: None.
+  * Code: 404 Not Found
 
-Success Response:
+---
 
-Code: 204 No Content
+### Posts API Endpoints (`/posts`)
 
-Error Response:
+#### 1. Get All Posts
 
-Code: 404 Not Found
+* **Endpoint:** GET /posts
+* **Description:** Retrieves a list of all posts.
+* **Request Body:** None.
+* **Success Response:**
 
-Posts API Endpoints (/posts)
-This resource manages posts, which are associated with users.
-
-1. Get All Posts
-Endpoint: GET /posts
-
-Description: Retrieves a list of all posts.
-
-Request Body: None.
-
-Success Response:
-
-Code: 200 OK
-
-Content:
+  * Code: 200 OK
+  * Content:
 
 ```json
-
 [
   {
     "id": 1,
@@ -249,180 +259,171 @@ Content:
     "userId": 1
   }
 ]
-2. Create a New Post
-Endpoint: POST /posts
+```
 
-Description: Creates a new post associated with an existing user.
+#### 2. Create a New Post
 
-Request Body:
+* **Endpoint:** POST /posts
+* **Description:** Creates a new post associated with an existing user.
+* **Request Body:**
 
 ```json
-
 {
   "title": "Another Post",
   "content": "More content here.",
   "userId": 2
 }
-Success Response:
+```
 
-Code: 201 Created
+* **Success Response:**
 
-Content: The newly created post object with its server-assigned id.
+  * Code: 201 Created
+  * Content: The newly created post object with its server-assigned id.
+* **Error Response:**
 
-Error Response:
-
-Code: 500 Internal Server Error
-
-Content:
+  * Code: 500 Internal Server Error (as implemented in our service layer)
+  * Content:
 
 ```json
-
 {
   "error": "Cannot create post. User with id 99 does not exist."
 }
-3. Get a Single Post
-Endpoint: GET /posts/{id}
+```
 
-Description: Retrieves a single post by its unique ID.
+#### 3. Get a Single Post
 
-Request Body: None.
+* **Endpoint:** GET /posts/{id}
+* **Description:** Retrieves a single post by its unique ID.
+* **Request Body:** None.
+* **Success Response:**
 
-Success Response:
+  * Code: 200 OK
+* **Error Response:**
 
-Code: 200 OK
+  * Code: 404 Not Found
 
-Error Response:
+#### 4. Update a Post
 
-Code: 404 Not Found
+* **Endpoint:** PUT /posts/{id}
+* **Description:** Updates the title, content, and user association of an existing post.
+* **Request Body:** JSON object with updated post details.
+* **Success Response:**
 
-4. Update a Post
-Endpoint: PUT /posts/{id}
+  * Code: 200 OK
+* **Error Response:**
 
-Description: Updates the title, content, and user association of an existing post.
+  * Code: 404 Not Found if the post ID does not exist.
+  * Code: 500 Internal Server Error if the userId does not exist.
 
-Request Body: JSON object with updated post details.
+#### 5. Delete a Post
 
-Success Response:
+* **Endpoint:** DELETE /posts/{id}
+* **Description:** Deletes a post by its unique ID.
+* **Request Body:** None.
+* **Success Response:**
 
-Code: 200 OK
+  * Code: 204 No Content
+* **Error Response:**
 
-Error Response:
+  * Code: 404 Not Found
 
-Code: 404 Not Found if post ID does not exist.
+---
 
-Code: 500 Internal Server Error if userId does not exist.
+## Application URL
 
-5. Delete a Post
-Endpoint: DELETE /posts/{id}
+* `https://qsmgq6qpcg.us-east-2.awsapprunner.com/users`
+* `https://qsmgq6qpcg.us-east-2.awsapprunner.com/posts`
 
-Description: Deletes a post by its unique ID.
+---
 
-Request Body: None.
+## Testing Approach
 
-Success Response:
+### Unit Testing
 
-Code: 204 No Content
+* The `UserServiceImplTest` class tests service layer business logic.
+* Used Mockito framework to mock repository layer.
+* Test scenarios included:
 
-Error Response:
+  * Fetching all users.
+  * Fetching user by ID (valid and invalid).
+  * Exception handling (`ResourceNotFoundException`).
+* Assertions performed using JUnit and AssertJ.
 
-Code: 404 Not Found
+### Integration Testing
 
-Testing Approach
-Unit Testing
-Each service class (UserServiceImpl, PostServiceImpl) tested independently.
+* The `UserControllerTest` class tests the REST controller layer.
+* Used `@WebMvcTest` for controller-only testing.
+* Used MockMvc for HTTP request-response simulation.
+* Test scenarios included:
 
-Used mocked repositories to verify business logic.
+  * Creating a user (`POST /users`).
+  * Fetching a user (`GET /users/{id}`).
+* ObjectMapper used for JSON serialization and deserialization.
+* Service layer was mocked using Mockito.
 
-Integration Testing
-Full end-to-end API behavior tested using embedded server.
+### Tools & Libraries Used
 
-Verified correct status codes, request, and response payloads.
+* JUnit 5
+* Mockito
+* Spring Boot Test
+* MockMvc
+* ObjectMapper (Jackson)
 
-Tested retry logic and exception handling.
+---
 
-Deployment Process
-Local Development
-Built complete Spring Boot REST API.
+## Deployment Process
 
-Verified functionality locally using Postman for CRUD operations.
+### Local Development
 
-Version Control
-Initialized local Git repository and pushed source code to GitHub:
+* Spring Boot REST API developed & tested locally.
 
-bash
+### Containerization (Dockerfile)
+
+Here’s the Dockerfile used for containerization:
+
+```dockerfile
+FROM openjdk:17-jdk-slim
+VOLUME /tmp
+COPY target/*.jar app.jar
+ENTRYPOINT ["java","-jar","/app.jar"]
+```
+
+### Version Control
+
+```bash
 git init
 git remote add origin <github-repo-url>
 git push origin main
+```
 
-AWS App Runner Deployment
-On AWS Console:
+### AWS App Runner Deployment
+
+* Source Code Repository: GitHub
+* Branch: `main`
+* Runtime: Dockerfile
+* Fully managed build & deployment by App Runner
+
+### CI/CD Automation
+
+* App Runner automatically redeploys on every commit pushed to GitHub.
+
+### CI/CD Pipeline Details
 
 CI/CD is implemented via AWS CodePipeline which has 4 steps:
-1. Source code pull stage - which pulls the code automatically on changes from GitHub repo - main branch
-2. Build using AWS CodeBuild - Builds the Maven jar package
-3. Docker image using ECR - Creates the docker image  in AWS ECR
-4. Deployment of service using AWS App Runner - Hosts the app remotely via deploying the generated ECR image
 
-Tools Used
-Spring Boot (Java 17)
+1. **Source code pull stage** - Pulls the code automatically on changes from GitHub repo (main branch).
+2. **Build using AWS CodeBuild** - Builds the Maven JAR package.
+3. **Docker image using ECR** - Creates the Docker image in AWS ECR.
+4. **Deployment of service using AWS App Runner** - Hosts the app remotely by deploying the generated ECR image.
 
-Docker
+---
 
-GitHub
+## Tools Used
 
-AWS App Runner (fully managed deployment service)
+* Spring Boot (Java 17)
+* Maven
+* Docker
+* GitHub
+* AWS App Runner
 
-# How to Run Locally (from ZIP file)
-
-Follow these steps to run the application locally after receiving the code as a ZIP file:
-
-# Unzip the Code
-
-Extract the contents of the ZIP file to your desired directory:
-
-```bash
-unzip userpostservice.zip
-cd extracted-folder-name
-
-**Install Java**
-Make sure Java 17 is installed. Verify with:
-
-java -version
-
-**Build & Run the Application**
-If you're using Maven:
-
-./mvnw spring-boot:run
-
-Or if Maven is already installed globally:
-mvn spring-boot:run
-
-**Access the Application**
-Once started, the API will be available at:
-
-http://localhost:8080/users
-
-http://localhost:8080/posts
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+---
